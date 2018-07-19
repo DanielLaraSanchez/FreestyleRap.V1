@@ -1,0 +1,12 @@
+ body{
+   margin-top:150px;
+ }
+
+
+#messageArea{
+  display:none;
+}
+
+.test{
+  display:flex;
+}
