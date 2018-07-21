@@ -1,6 +1,5 @@
 let $ = require('jquery')
 
-const players = {}
 
 navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
 
@@ -13,9 +12,33 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
     stream: stream
   })
 
-  const Player = require('./client2/player.js')
+  const Player = require('./player.js')
   const you = new Player()
   you.addStream(stream)
+
+
+  // swarm.on('connect', function (peer, id) {
+  //   if (!players[id]) {
+  //     players[id] = new Player()
+  //     peer.on('data', function (data) {
+  //       data = JSON.parse(data.toString())
+  //       players[id].update(data)
+  //     })
+  //     players[id].addStream(peer.stream)
+  //   }
+  // })
+
+  let socket = io.connect();
+
+    socket.on('get connections', function(data){
+        console.log(data)
+       // let html = '';
+       // for(i = 0; i < data.length; i++){
+       //   html += '<li class="list-group-item">'+data[i]+'</li>';
+       // }
+       // $users.html(html);
+    });
+    const players = {}
 
 
   swarm.on('connect', function (peer, id) {
@@ -28,7 +51,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
       players[id].addStream(peer.stream)
     }
   })
-
+ console.log("daniel")
   swarm.on('disconnect', function (peer, id) {
     if (players[id]) {
       players[id].element.parentNode.removeChild(players[id].element)
@@ -37,9 +60,9 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
   })
 
   setInterval(function () {
-    //hub.broadcast('update', window.location.hash)
+    // hub.broadcast('update', window.location.hash)
     you.update()
-    //hub.broadcast('update', you)
+    // hub.broadcast('update', you)
     const youString = JSON.stringify(you)
     swarm.peers.forEach(function (peer) {
       peer.send(youString)
@@ -47,7 +70,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
   }, 100)
 
   document.addEventListener('keypress', function (e) {
-    const speed = 16
+    const speed = 146
     switch (e.key) {
       case 'a':
         you.x -= speed

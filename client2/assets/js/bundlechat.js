@@ -32,10 +32,13 @@ $(function(){
   $userForm.submit(function(e){
     e.preventDefault();
     socket.emit('new user', $username.val(), function(data){
+      console.log(data)
+
       if(data){
         $userForm.hide();
         $messageArea.show();
         $messageArea.css('display', 'flex');
+        console.log(data)
       }
     });
     $username.val('');

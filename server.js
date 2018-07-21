@@ -12,6 +12,8 @@ let path = require('path');
  io.sockets.on('connection', function(socket){
    connections.push(socket);
    console.log('Connected: %s sockets connected', connections.length);
+   console.log(connections[0].id)
+
 
  //Disconnect
  socket.on('disconnect', function(data){
@@ -31,12 +33,15 @@ let path = require('path');
 //new user
 socket.on('new user', function(data,callback){
   callback(true);
-  console.log(callback(true))
   socket.username = data;
   users.push(socket.username);
   updateUsernames();
 })
 
+// io.sockets.emit('get connections', connections)
+function updateUsernamess(){
+  io.sockets.emit('get connetions', connections);
+}
 function updateUsernames(){
   io.sockets.emit('get users', users);
 }
@@ -54,35 +59,33 @@ function updateUsernames(){
 server.listen(process.env.PORT || 3000);
 console.log('Server  hi running HIJOPUTA........')
 
+
+
 // app.use(bodyParser.json());
 // app.use('/', express.static('client2'));
 
 
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/client2/index3.html');
+  res.sendFile(__dirname + '/client2/index.html');
 })
 
-app.get('/bundlechat.js', function(req, res){
-  res.sendFile(__dirname + '/client2/bundlechat.js')
+app.get('/assets/js/bundlechat.js', function(req, res){
+  res.sendFile(__dirname + '/client2/assets/js/bundlechat.js')
 })
-app.get('/bundlevideo.js', function(req, res){
-  res.sendFile(__dirname + '/client2/bundlevideo.js')
+app.get('/assets/js/bundlevideo.js', function(req, res){
+  res.sendFile(__dirname + '/client2/assets/js/bundlevideo.js')
 })
-app.get('/css/style.css', function(req, res){
-  res.sendFile(__dirname + '/client2/css/style.css')
+app.get('/assets/css/style.css', function(req, res){
+  res.sendFile(__dirname + '/client2/assets/css/style.css')
 })
-app.get('/css/stylewebcam.css', function(req, res){
-  res.sendFile(__dirname + '/client2/css/stylewebcam.css')
+app.get('/assets/css/stylewebcam.css', function(req, res){
+  res.sendFile(__dirname + '/client2/assets/css/stylewebcam.css')
 })
-app.get('/img/fondo2.jpg', function(req, res){
-  res.sendFile(__dirname + '/client2/img/fondo2.jpg')
-})
-
-app.get('/chat', function(req, res){
-  res.sendFile(__dirname + '/client2/index.html')
+app.get('/assets/img/fondo2.jpg', function(req, res){
+  res.sendFile(__dirname + '/client2/assets/img/fondo2.jpg')
 })
 
-app.get('test/', function(req, res){
-  res.sendFile(__dirname + '/client2/index.html')
+app.get('/battle', function(req, res){
+  res.sendFile(__dirname + '/client2/index3.html')
 })

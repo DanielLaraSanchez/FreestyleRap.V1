@@ -1,42 +1,97 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-// module.exports = Player
-//
-//
-// function Player (data) {
-//   data = data || {}
-//   this.color = data.color || randomColor()
-//   this.x = 0
-//   this.y = 0
-//   this.element = document.createElement('video')
-//   Object.assign(this.element.style, {
-//     width: '64px',
-//     height: '64px',
-//     position: 'absolute',
-//     top: 'px',
-//     left: '0px',
-//     backgroundColor: this.color
-//   })
-//   document.body.appendChild(this.element)
-// }
-//
-// Player.prototype.addStream = function (stream){
-//   this.element.srcObject = stream
-//   this.element.play()
-// }
-//
-// Player.prototype.update = function (data){
-//   data = data || {}
-//   this.x = data.x || this.x
-//   this.y = data.y || this.y
-//   Object.assign(this.element.style, {
-//     top: this.y + 'px',
-//     left: this.x + 'px'
-//   })
-// }
-//
-// function randomColor (){
-//   return '#' + ((1 << 24) * Math.random() | 0).toString()
-// }
+let $ = require('jquery')
+
+
+navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+
+  const signalhub = require('signalhub')
+  const createSwarm = require('webrtc-swarm')
+  const hub = signalhub('my-game', [
+    'http://localhost:8080'
+  ])
+  const swarm = createSwarm(hub, {
+    stream: stream
+  })
+
+  const Player = require('./player.js')
+  const you = new Player()
+  you.addStream(stream)
+
+
+  // swarm.on('connect', function (peer, id) {
+  //   if (!players[id]) {
+  //     players[id] = new Player()
+  //     peer.on('data', function (data) {
+  //       data = JSON.parse(data.toString())
+  //       players[id].update(data)
+  //     })
+  //     players[id].addStream(peer.stream)
+  //   }
+  // })
+
+  let socket = io.connect();
+
+    socket.on('get connections', function(data){
+        console.log(data)
+       // let html = '';
+       // for(i = 0; i < data.length; i++){
+       //   html += '<li class="list-group-item">'+data[i]+'</li>';
+       // }
+       // $users.html(html);
+    });
+    const players = {}
+
+
+  swarm.on('connect', function (peer, id) {
+    if (!players[id]) {
+      players[id] = new Player()
+      peer.on('data', function (data) {
+        data = JSON.parse(data.toString())
+        players[id].update(data)
+      })
+      players[id].addStream(peer.stream)
+    }
+  })
+ console.log("daniel")
+  swarm.on('disconnect', function (peer, id) {
+    if (players[id]) {
+      players[id].element.parentNode.removeChild(players[id].element)
+      delete players[id]
+    }
+  })
+
+  setInterval(function () {
+    // hub.broadcast('update', window.location.hash)
+    you.update()
+    // hub.broadcast('update', you)
+    const youString = JSON.stringify(you)
+    swarm.peers.forEach(function (peer) {
+      peer.send(youString)
+    })
+  }, 100)
+
+  document.addEventListener('keypress', function (e) {
+    const speed = 146
+    switch (e.key) {
+      case 'a':
+        you.x -= speed
+        break
+      case 'd':
+        you.x += speed
+        break
+      case 'w':
+        you.y -= speed
+        break
+      case 's':
+        you.y += speed
+        break
+    }
+  }, false)
+
+})
+
+},{"./player.js":2,"jquery":15,"signalhub":35,"webrtc-swarm":49}],2:[function(require,module,exports){
+
 
 module.exports = Player
 
@@ -47,7 +102,7 @@ function Player (data) {
   this.color = data.color || randomColor()
   this.x = 0
   this.y = 0
-  this.element = document.getElementById("video")
+  this.element = document.createElement('video')
   Object.assign(this.element.style, {
     width: '164px',
     height: '164px',
@@ -78,76 +133,7 @@ function randomColor () {
   return '#' + Math.random().toString(16).substr(-6)
 }
 
-},{}],2:[function(require,module,exports){
-let $ = require('jquery')
-
-const players = {}
-
-navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
-
-  const signalhub = require('signalhub')
-  const createSwarm = require('webrtc-swarm')
-  const hub = signalhub('my-game', [
-    'http://localhost:8080'
-  ])
-  const swarm = createSwarm(hub, {
-    stream: stream
-  })
-
-  const Player = require('./client2/player.js')
-  const you = new Player()
-  you.addStream(stream)
-
-
-  swarm.on('connect', function (peer, id) {
-    if (!players[id]) {
-      players[id] = new Player()
-      peer.on('data', function (data) {
-        data = JSON.parse(data.toString())
-        players[id].update(data)
-      })
-      players[id].addStream(peer.stream)
-    }
-  })
-
-  swarm.on('disconnect', function (peer, id) {
-    if (players[id]) {
-      players[id].element.parentNode.removeChild(players[id].element)
-      delete players[id]
-    }
-  })
-
-  setInterval(function () {
-    //hub.broadcast('update', window.location.hash)
-    you.update()
-    //hub.broadcast('update', you)
-    const youString = JSON.stringify(you)
-    swarm.peers.forEach(function (peer) {
-      peer.send(youString)
-    })
-  }, 100)
-
-  document.addEventListener('keypress', function (e) {
-    const speed = 16
-    switch (e.key) {
-      case 'a':
-        you.x -= speed
-        break
-      case 'd':
-        you.x += speed
-        break
-      case 'w':
-        you.y -= speed
-        break
-      case 's':
-        you.y += speed
-        break
-    }
-  }, false)
-
-})
-
-},{"./client2/player.js":1,"jquery":15,"signalhub":35,"webrtc-swarm":49}],3:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -21658,4 +21644,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":84,"_process":65,"inherits":61}]},{},[2]);
+},{"./support/isBuffer":84,"_process":65,"inherits":61}]},{},[1]);
