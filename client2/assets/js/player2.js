@@ -1,10 +1,6 @@
+module.exports = Player2
 
-
-module.exports = Player
-
-
-
-function Player (data) {
+function Player2 (data) {
   data = data || {}
   this.color = data.color || randomColor()
   this.x = 0
@@ -16,17 +12,17 @@ function Player (data) {
     position: 'absolute',
     top: '0px',
     left: '0px',
-    backgroundColor: 'black'
+    backgroundColor: 'red'
   })
   document.body.appendChild(this.element)
 }
 
-Player.prototype.addStream = function (stream) {
+Player2.prototype.addStream = function (stream) {
   this.element.srcObject = stream
   this.element.play()
 }
 
-Player.prototype.update = function (data) {
+Player2.prototype.update = function (data) {
   data = data || {}
   this.x = data.x || this.x
   this.y = data.y || this.y

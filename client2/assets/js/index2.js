@@ -13,12 +13,13 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
   })
 
   const Player = require('./player.js')
+  const Player2 = require('./player2.js')
+
   const you = new Player()
   you.addStream(stream)
 
 
   // swarm.on('connect', function (peer, id) {
-  //   if (!players[id]) {
   //     players[id] = new Player()
   //     peer.on('data', function (data) {
   //       data = JSON.parse(data.toString())
@@ -28,30 +29,46 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
   //   }
   // })
 
-  let socket = io.connect();
 
-    socket.on('get connections', function(data){
-        console.log(data)
-       // let html = '';
-       // for(i = 0; i < data.length; i++){
-       //   html += '<li class="list-group-item">'+data[i]+'</li>';
-       // }
-       // $users.html(html);
-    });
-    const players = {}
+  const players = {}
+const test = []
 
 
-  swarm.on('connect', function (peer, id) {
-    if (!players[id]) {
-      players[id] = new Player()
-      peer.on('data', function (data) {
-        data = JSON.parse(data.toString())
-        players[id].update(data)
-      })
-      players[id].addStream(peer.stream)
-    }
+  function setup (swarm, peer, id) {
+  peer.on('connect', function () {
+    debug('connected to peer', id)
+
+    swarm.peers.push(peer)
+    swarm.emit('peer', peer, id)
+    swarm.emit('connect', peer, id)
   })
- console.log("daniel")
+}
+
+
+console.log(swarm.peers)
+console.log(players)
+
+    swarm.on('connect', function (peer, id) {
+      setup(swarm, swarm.peers, id)
+
+        if (!players[id]) {
+        players[id] = new Player2()
+        test.push(peer)
+        peer.on('data', function (data) {
+          data = JSON.parse(data.toString())
+          players[id].update(data)
+        })
+        players[id].addStream(peer.stream)
+      }
+    })
+console.log(test)
+  // swarm.on('peer', function(peer, id){
+  //   console.log('connected to a new peer:', id)
+  //   console.log('total peers:', swarm.peers.length)
+  //
+  // })
+
+
   swarm.on('disconnect', function (peer, id) {
     if (players[id]) {
       players[id].element.parentNode.removeChild(players[id].element)
@@ -60,12 +77,13 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function 
   })
 
   setInterval(function () {
-    // hub.broadcast('update', window.location.hash)
     you.update()
-    // hub.broadcast('update', you)
     const youString = JSON.stringify(you)
     swarm.peers.forEach(function (peer) {
+
       peer.send(youString)
+
+
     })
   }, 100)
 
